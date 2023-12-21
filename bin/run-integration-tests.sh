@@ -5,7 +5,6 @@ source $scriptFolder/definitions.sh
 
 cp magento-files/phpunit.xml src/dev/tests/integration/
 cp magento-files/install-config-mysql.php src/dev/tests/integration/etc/
-cp magento-files/fake-config.php src/app/etc/config.php
 
 docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
 composer require $COMPOSER_PACKAGE:$COMPOSER_VERSION
