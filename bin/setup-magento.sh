@@ -1,0 +1,51 @@
+#!/bin/bash
+script=`readlink -f $BASH_SOURCE`
+scriptFolder=`dirname $script`
+source $scriptFolder/definitions.sh
+
+test -d src/ || exit
+
+docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
+composer create-project --no-install --stability dev --prefer-source --repository-url=$MAGENTO_REPO $MAGENTO_PACKAGE:$MAGENTO_VERSION .
+EOF
+
+if [ ! -f src/composer.json ] ; then
+    echo "We don't have a composer file"
+    exit
+fi
+
+docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
+mkdir -p var/composer_home
+test -f ~/.composer/auth.json && cp ~/.composer/auth.json var/composer_home/auth.json
+
+composer config minimum-stability dev
+composer config prefer-stable true
+
+composer config repositories.0 --unset
+composer config repositories.magento-mirror composer $MAGENTO_REPO
+composer config repositories.magento-marketplace composer https://repo.magento.com/
+
+composer require --no-install yireo/magento2-integration-test-helper
+composer require --no-install $COMPOSER_NAME
+
+composer install
+if [ ! -d "vendor" ] ; then
+    echo "Composer directory does not exist. Something went wrong here"
+    exit;
+fi
+
+php -d memory_limit=-1 bin/magento setup:install --base-url=http://localhost/ \
+--db-host=${DB_HOST} --db-name=${DB_NAME} \
+--db-user=${DB_USER} --db-password=${DB_PASSWORD} \
+--admin-firstname=$ADMIN_FIRSTNAME --admin-lastname=$ADMIN_LASTNAME \
+--admin-email=$ADMIN_EMAIL \
+--admin-user=$ADMIN_USER --admin-password=$ADMIN_PASSWORD \
+--backend-frontname=$ADMIN_PATH --language=en_US \
+--currency=USD --timezone=Europe/Amsterdam --cleanup-database \
+--sales-order-increment-prefix="ORD$" --session-save=db \
+--${ES_HOST_OPTION}=${ES_HOST} --${ES_PORT_OPTION}=${ES_PORT} \
+--search-engine=${SEARCH_ENGINE} \
+--use-rewrites=1 --skip-db-validation || exit
+
+EOF
+

@@ -1,0 +1,47 @@
+version: '3.6'
+services:
+  php-fpm:
+    build: ./docker-compose/php-fpm
+    user: www-data
+    volumes:
+      - ./src:/var/www/html:rw
+      - ~/.composer:/var/www/.composer
+      - ~/.ssh:/var/www/.ssh
+    depends_on:
+      - mysql
+      - redis
+      - opensearch
+
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - ./docker-compose/mysql/mysqld_test.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=magento2
+      - MYSQL_USER=magento2
+      - MYSQL_PASSWORD=magento2
+    tmpfs:
+      - /tmp
+      - /var/lib/mysql
+
+  opensearch:
+    build: ./docker-compose/opensearch
+    environment:
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -Xss1m"
+      - "OPENSEARCH_JAVA_OPTS=-Xms256m -Xmx256m"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - discovery.type=single-node
+      - cluster.routing.allocation.disk.threshold_enabled=false
+      - script.painless.regex.enabled=true
+      - bootstrap.memory_lock=true
+      - network.host=0.0.0.0
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+    tmpfs:
+      - /tmp
+      - /usr/share/elasticsearch/data
+
+  redis:
+    image: redis:7.0
+
