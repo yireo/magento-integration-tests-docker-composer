@@ -12,4 +12,4 @@ GIT_REPO=git@github.com:yireo/Yireo_GoogleTagManager2.git
 
 Next, run `bin/setup-magento.sh`.
 
-If successfull, run `bin/run-integration-tests.sh`.
+If successfull, run `bin/run-integration-tests.sh` (once or repeatedly).
