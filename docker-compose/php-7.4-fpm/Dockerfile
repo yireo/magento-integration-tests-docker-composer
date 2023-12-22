@@ -8,6 +8,7 @@ RUN usermod  --uid $UID $UNAME
 RUN groupmod --gid $GID $UGROUP
 
 RUN apt-get update && apt-get -y install \
+    procps \
     git \
     zlib1g-dev \
     libzip-dev \

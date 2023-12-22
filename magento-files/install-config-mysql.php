@@ -14,7 +14,7 @@ return (new InstallConfig())
     ->setDisableModules($disableModules)
     ->addDb('mysql')
     ->addRedis('redis')
-    ->addElasticSearch('opensearch', 'elasticsearch', 9200)
+    ->addElasticSearch('opensearch', 'opensearch', 9200)
     ->get();
 
 

@@ -3,7 +3,7 @@ script=`readlink -f $BASH_SOURCE`
 scriptFolder=`dirname $script`
 source $scriptFolder/definitions.sh
 
-test -d src/ || exit
+mkdir -p src/
 test -z "$GIT_REPO" && echo "GIT_REPO not set" && exit
 
 export PHP_VERSION=$PHP_VERSION
@@ -13,15 +13,6 @@ docker-compose up -d
 if [ ! -d src/app/etc ]; then
 docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
 composer create-project --no-install --stability dev --prefer-source --repository-url=$MAGENTO_REPO $MAGENTO_PACKAGE:$MAGENTO_VERSION .
-EOF
-fi
-
-if [ ! -f src/composer.json ] ; then
-    echo "We don't have a composer file"
-    exit
-fi
-
-docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
 mkdir -p var/composer_home
 test -f ~/.composer/auth.json && cp ~/.composer/auth.json var/composer_home/auth.json
 
@@ -33,8 +24,20 @@ composer config repositories.magento-mirror composer $MAGENTO_REPO
 composer config repositories.magento-marketplace composer https://repo.magento.com/
 
 composer require --no-install yireo/magento2-integration-test-helper
+EOF
+fi
 
-git clone $GIT_REPO magento2-module-source || exit
+if [ ! -f src/composer.json ] ; then
+    echo "We don't have a composer file"
+    exit
+fi
+
+docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
+
+if [ ! -d magento2-module-source ] ; then
+  git clone $GIT_REPO magento2-module-source || exit
+fi
+
 composer config repositories.magento2-module-source path magento2-module-source/ || exit
 
 composer require --no-install $COMPOSER_NAME
@@ -46,7 +49,7 @@ if [ ! -d "vendor" ] ; then
     exit;
 fi
 
-if [ -f app/etc/env.php ] ; then
+if [ ! -f app/etc/env.php ] ; then
 php -d memory_limit=-1 bin/magento setup:install --base-url=http://localhost/ \
 --db-host=${DB_HOST} --db-name=${DB_NAME} \
 --db-user=${DB_USER} --db-password=${DB_PASSWORD} \
