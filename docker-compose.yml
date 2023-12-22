@@ -1,7 +1,7 @@
 version: '3.6'
 services:
   php-fpm:
-    build: ./docker-compose/php-fpm
+    build: ./docker-compose/php-${PHP_VERSION}-fpm
     user: www-data
     volumes:
       - ./src:/var/www/html:rw

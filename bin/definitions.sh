@@ -1,9 +1,11 @@
 #!/bin/bash
 MAGENTO_PACKAGE=magento/project-community-edition
 MAGENTO_VERSION=2.4.6-p3
+PHP_VERSION=8.2
 MAGENTO_REPO=https://mirror.mage-os.org/
 COMPOSER_PACKAGE=
 COMPOSER_VERSION=@dev
+GIT_REPO=
 MODULE_NAME=
 
 DB_HOST=mysql

@@ -4,10 +4,17 @@ scriptFolder=`dirname $script`
 source $scriptFolder/definitions.sh
 
 test -d src/ || exit
+test -z "$GIT_REPO" && echo "GIT_REPO not set" && exit
 
+export PHP_VERSION=$PHP_VERSION
+
+docker-compose up -d
+
+if [ ! -d src/app/etc ]; then
 docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
 composer create-project --no-install --stability dev --prefer-source --repository-url=$MAGENTO_REPO $MAGENTO_PACKAGE:$MAGENTO_VERSION .
 EOF
+fi
 
 if [ ! -f src/composer.json ] ; then
     echo "We don't have a composer file"
@@ -26,14 +33,20 @@ composer config repositories.magento-mirror composer $MAGENTO_REPO
 composer config repositories.magento-marketplace composer https://repo.magento.com/
 
 composer require --no-install yireo/magento2-integration-test-helper
+
+git clone $GIT_REPO magento2-module-source || exit
+composer config repositories.magento2-module-source path magento2-module-source/ || exit
+
 composer require --no-install $COMPOSER_NAME
 
 composer install
+
 if [ ! -d "vendor" ] ; then
     echo "Composer directory does not exist. Something went wrong here"
     exit;
 fi
 
+if [ -f app/etc/env.php ] ; then
 php -d memory_limit=-1 bin/magento setup:install --base-url=http://localhost/ \
 --db-host=${DB_HOST} --db-name=${DB_NAME} \
 --db-user=${DB_USER} --db-password=${DB_PASSWORD} \
@@ -45,7 +58,8 @@ php -d memory_limit=-1 bin/magento setup:install --base-url=http://localhost/ \
 --sales-order-increment-prefix="ORD$" --session-save=db \
 --${ES_HOST_OPTION}=${ES_HOST} --${ES_PORT_OPTION}=${ES_PORT} \
 --search-engine=${SEARCH_ENGINE} \
---use-rewrites=1 --skip-db-validation || exit
+--use-rewrites=1 || exit
+fi
 
 EOF
 
