@@ -28,3 +28,5 @@ If successfull, run `bin/run-integration-tests.sh` (once or repeatedly).
 This test procedure relies upon the Yireo Integration Testing Helper to offer a file `install-config-mysql.php`. By default, this includes a
 configuration where the test framework is only run with the Magento core modules enabled and your own module enabled. However, you could tune the file
 `magento-files/install-config-mysql.php` to also disable things like MSI and GraphQL .... if you want.
+
+For repeated runs, you might also want to toggle the `TESTS_CLEANUP` constant in `magento-files/phpunit.xml`.
