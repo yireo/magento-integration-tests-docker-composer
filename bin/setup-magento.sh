@@ -74,6 +74,7 @@ fi
 
 docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
 composer require $COMPOSER_PACKAGE:$COMPOSER_VERSION
+bin/magento module:enable ${MODULE_NAME}
 bin/magento module:status ${MODULE_NAME}
 bin/magento deploy:mode:set developer
 bin/magento setup:di:compile || exit

@@ -6,8 +6,8 @@ use Yireo\IntegrationTestHelper\Utilities\InstallConfig;
 $disableModules = (new DisableModules(__DIR__.'/../../../../'))
     ->disableAll()
     ->enableMagento()
-    ->disableMagentoInventory()
-    ->disableGraphQl()
+    #->disableMagentoInventory()
+    #->disableGraphQl()
     ->enableByMagentoModuleEnv();
 
 return (new InstallConfig())

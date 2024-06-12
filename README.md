@@ -1,6 +1,6 @@
 # Run Magento integration tests locally
-
-### Setup
+ 
+### Setup of Magento and your module 
 Clone this repository.
 
 Create a new file `bin/local-definitions.sh` and add your custom variables. See the `bin/definitions.sh` for possible
@@ -23,3 +23,8 @@ MODULE_FOLDER=/data/git/yireo/magento2-extensions/Yireo_GoogleTagManager2/
 Next, run `bin/setup-magento.sh`.
 
 If successfull, run `bin/run-integration-tests.sh` (once or repeatedly).
+
+### Tuning Integration Tests
+This test procedure relies upon the Yireo Integration Testing Helper to offer a file `install-config-mysql.php`. By default, this includes a
+configuration where the test framework is only run with the Magento core modules enabled and your own module enabled. However, you could tune the file
+`magento-files/install-config-mysql.php` to also disable things like MSI and GraphQL .... if you want.
