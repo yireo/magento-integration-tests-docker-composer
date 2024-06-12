@@ -4,7 +4,6 @@ scriptFolder=`dirname $script`
 source $scriptFolder/definitions.sh
 
 mkdir -p src/
-test -z "$GIT_REPO" && echo "GIT_REPO not set" && exit
 
 export PHP_VERSION=$PHP_VERSION
 
@@ -24,29 +23,35 @@ composer config repositories.magento-mirror composer $MAGENTO_REPO
 composer config repositories.magento-marketplace composer https://repo.magento.com/
 
 composer require --no-install yireo/magento2-integration-test-helper
-EOF
-fi
 
-if [ ! -f src/composer.json ] ; then
-    echo "We don't have a composer file"
-    exit
+if [ ! -f composer.json ] ; then
+    echo "We don't have a composer file"; exit
 fi
-
-docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
 
 if [ ! -d magento2-module-source ] ; then
-  git clone $GIT_REPO magento2-module-source || exit
+    if [ -n "$GIT_REPO" ]; then
+        echo "Cloning GIT_REPO: $GIT_REPO"
+        git clone $GIT_REPO magento2-module-source || exit
+    fi 
+
+    if [ -n "$MODULE_FOLDER" ]; then
+        echo "Symlinking MODULE_FOLDER: $MODULE_FOLDER"
+        ln -s $MODULE_FOLDER magento2-module-source || exit
+    fi 
+fi
+    
+if [ ! -d magento2-module-source ] ; then
+    echo "Folder 'magento2-module-source' does not exist"; exit
 fi
 
 composer config repositories.magento2-module-source path magento2-module-source/ || exit
 
 composer require --no-install $COMPOSER_NAME
 
-composer install
+composer install || exit
 
 if [ ! -d "vendor" ] ; then
-    echo "Composer directory does not exist. Something went wrong here"
-    exit;
+    echo "Composer directory does not exist. Something went wrong here"; exit
 fi
 
 if [ ! -f app/etc/env.php ] ; then
