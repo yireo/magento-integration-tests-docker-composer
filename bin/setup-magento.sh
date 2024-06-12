@@ -7,6 +7,18 @@ mkdir -p src/
 
 export PHP_VERSION=$PHP_VERSION
 
+if [ ! -d module-src ] ; then
+    if [ -n "$GIT_REPO" ]; then
+        echo "Cloning GIT_REPO: $GIT_REPO"
+        git clone $GIT_REPO module-src || exit
+    fi 
+
+    if [ -n "$MODULE_FOLDER" ]; then
+        echo "Symlinking MODULE_FOLDER: $MODULE_FOLDER"
+        ln -s $MODULE_FOLDER module-src || exit
+    fi 
+fi
+    
 docker-compose up -d
 
 if [ ! -d src/app/etc ]; then
@@ -29,24 +41,12 @@ if [ ! -f composer.json ] ; then
 fi
 
 if [ ! -d magento2-module-source ] ; then
-    if [ -n "$GIT_REPO" ]; then
-        echo "Cloning GIT_REPO: $GIT_REPO"
-        git clone $GIT_REPO magento2-module-source || exit
-    fi 
-
-    if [ -n "$MODULE_FOLDER" ]; then
-        echo "Symlinking MODULE_FOLDER: $MODULE_FOLDER"
-        ln -s $MODULE_FOLDER magento2-module-source || exit
-    fi 
-fi
-    
-if [ ! -d magento2-module-source ] ; then
     echo "Folder 'magento2-module-source' does not exist"; exit
 fi
 
 composer config repositories.magento2-module-source path magento2-module-source/ || exit
 
-composer require --no-install $COMPOSER_NAME
+composer require --no-install $COMPOSER_PACKAGE:$COMPOSER_VERSION
 
 composer install || exit
 
@@ -66,8 +66,17 @@ php -d memory_limit=-1 bin/magento setup:install --base-url=http://localhost/ \
 --sales-order-increment-prefix="ORD$" --session-save=db \
 --${ES_HOST_OPTION}=${ES_HOST} --${ES_PORT_OPTION}=${ES_PORT} \
 --search-engine=${SEARCH_ENGINE} \
---use-rewrites=1 || exit
+--use-rewrites=1 || exit;
 fi
 
 EOF
+fi
 
+docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
+composer require $COMPOSER_PACKAGE:$COMPOSER_VERSION
+bin/magento module:status ${MODULE_NAME}
+bin/magento deploy:mode:set developer
+bin/magento setup:di:compile || exit
+bin/magento deploy:mode:set developer
+
+EOF
