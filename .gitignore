@@ -1,4 +1,5 @@
 src/
 module-src/
+module-src
 bin/local-definitions.sh
 .idea/
