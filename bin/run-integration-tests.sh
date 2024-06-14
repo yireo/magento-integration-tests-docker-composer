@@ -6,6 +6,14 @@ source $scriptFolder/definitions.sh
 cp magento-files/phpunit.xml src/dev/tests/integration/
 cp magento-files/install-config-mysql.php src/dev/tests/integration/etc/
 
+export PHP_VERSION=$PHP_VERSION
+echo "Setting PHP_VERSION $PHP_VERSION"
+
+export MODULE_NAME=$MODULE_NAME
+echo "Setting MODULE_NAME $MODULE_NAME"
+
+# @todo: Copy module sources again
+
 docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
 cd dev/tests/integration
 test -d ../../../vendor/$COMPOSER_PACKAGE/Test/Integration/ || exit

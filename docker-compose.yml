@@ -4,7 +4,7 @@ services:
     user: www-data
     volumes:
       - ./src:/var/www/html:rw
-      - ./module-src:/var/www/html/magento2-module-source:rw
+      - ./module-src:/var/www/magento2-module-source:rw
       - ~/.composer:/var/www/.composer
       - ~/.ssh:/var/www/.ssh
     depends_on:

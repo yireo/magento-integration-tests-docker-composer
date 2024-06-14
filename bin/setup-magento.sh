@@ -3,9 +3,12 @@ script=`readlink -f $BASH_SOURCE`
 scriptFolder=`dirname $script`
 source $scriptFolder/definitions.sh
 
+echo "Removing src/ folder"
+test -d src/ && rm -rf src/
 mkdir -p src/
 
 export PHP_VERSION=$PHP_VERSION
+echo "Setting PHP_VERSION $PHP_VERSION"
 
 if [ ! -d module-src ] ; then
     if [ -n "$GIT_REPO" ]; then
@@ -19,11 +22,18 @@ if [ ! -d module-src ] ; then
     fi 
 fi
     
+echo "docker-compose down && docker-compose up -d"
+docker-compose down
 docker-compose up -d
 
 if [ ! -d src/app/etc ]; then
 docker-compose exec -T --user www-data -w /var/www/html php-fpm bash <<EOF
-composer create-project --no-install --stability dev --prefer-source --repository-url=$MAGENTO_REPO $MAGENTO_PACKAGE:$MAGENTO_VERSION .
+composer create-project --no-install --stability dev --prefer-source --repository-url=$MAGENTO_REPO $MAGENTO_PACKAGE:$MAGENTO_VERSION . || exit
+
+if [ ! -f composer.json ] ; then
+    echo "We don't have a composer file"; exit
+fi
+
 mkdir -p var/composer_home
 test -f ~/.composer/auth.json && cp ~/.composer/auth.json var/composer_home/auth.json
 
@@ -34,17 +44,17 @@ composer config repositories.0 --unset
 composer config repositories.magento-mirror composer $MAGENTO_REPO
 composer config repositories.magento-marketplace composer https://repo.magento.com/
 
-composer require --no-install yireo/magento2-integration-test-helper
+composer require --no-install yireo/magento2-integration-test-helper:@dev
 
 if [ ! -f composer.json ] ; then
     echo "We don't have a composer file"; exit
 fi
 
-if [ ! -d magento2-module-source ] ; then
+if [ ! -d /var/www/magento2-module-source ] ; then
     echo "Folder 'magento2-module-source' does not exist"; exit
 fi
 
-composer config repositories.magento2-module-source path magento2-module-source/ || exit
+composer config repositories.magento2-module-source path /var/www/magento2-module-source || exit
 
 composer require --no-install $COMPOSER_PACKAGE:$COMPOSER_VERSION
 
