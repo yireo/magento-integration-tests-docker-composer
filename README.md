@@ -30,3 +30,9 @@ configuration where the test framework is only run with the Magento core modules
 `magento-files/install-config-mysql.php` to also disable things like MSI and GraphQL .... if you want.
 
 For repeated runs, you might also want to toggle the `TESTS_CLEANUP` constant in `magento-files/phpunit.xml`.
+
+### OpenSearch dummy
+During the installation of Magento, the existence of OpenSearch is checked by opening up a connection with the server on the
+right part. Nothing else. Therefore you could also speed things up by adding a dummy PHP server instead. This is part of the
+current `docker-compose.yml` file.
+
